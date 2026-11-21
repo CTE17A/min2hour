@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0d0e11">
+    <title>Минуты → Часы</title>
+    <style>
+        :root {
+            --bg: #0d0e11;
+            --surface: #17191f;
+            --surface-light: #22252e;
+            --surface-active: #2e323e;
+            --accent: #38e5b5;
+            --accent-dim: rgba(56, 229, 181, 0.12);
+            --accent-border: rgba(56, 229, 181, 0.25);
+            --text: #ffffff;
+            --text-muted: #8b92a5;
+            --danger: #ff5c5c;
+            --danger-dim: rgba(255, 92, 92, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100dvh;
+            background-color: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        /* Контейнер на 100% ширины и высоты без прыжков */
+        .app {
+            width: 100%;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            gap: 10px;
+        }
+
+        /* Верхний дисплей с жестко фиксированной геометрией */
+        .display-card {
+            background: linear-gradient(180deg, var(--surface) 0%, #13151a 100%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 22px;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex: 1;
+            min-height: 170px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .input-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+
+        .input-wrapper {
+            width: 100%;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+        }
+        .input-wrapper::-webkit-scrollbar { display: none; }
+
+        .input-display {
+            font-size: 44px;
+            font-weight: 700;
+            color: var(--text);
+            white-space: nowrap;
+            letter-spacing: -0.5px;
+            transition: font-size 0.1s ease;
+        }
+
+        .input-display.placeholder {
+            color: #3f4554;
+        }
+
+        .divider {
+            height: 1px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.07);
+            margin: 6px 0 10px 0;
+        }
+
+        /* Блок результатов */
+        .results {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .res-item {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 11px 14px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: transform 0.08s, background 0.15s;
+        }
+
+        .res-item:active {
+            transform: scale(0.985);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .res-text-wrap {
+            flex: 1;
+            min-width: 0;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+        }
+        .res-text-wrap::-webkit-scrollbar { display: none; }
+
+        .res-main-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .res-dec-text {
+            font-size: 17px;
+            font-weight: 600;
+            color: #d1d5db;
+        }
+
+        .copy-badge {
+            flex-shrink: 0;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 10px;
+            background: var(--surface-light);
+            color: var(--text-muted);
+            transition: all 0.15s;
+        }
+
+        .copy-badge.copied {
+            background: var(--accent);
+            color: #062119;
+        }
+
+        /* Кнопки быстрого сложения */
+        .quick-bar {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .q-btn {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border: 1px solid var(--accent-border);
+            border-radius: 14px;
+            height: 44px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.08s, background 0.12s;
+        }
+
+        .q-btn:active {
+            transform: scale(0.95);
+            background: rgba(56, 229, 181, 0.25);
+        }
+
+        /* Цифровая клавиатура на всю ширину */
+        .keypad {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .key {
+            width: 100%;
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 16px;
+            height: 60px;
+            font-size: 26px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.07s, background 0.1s;
+        }
+
+        .key:active {
+            transform: scale(0.95);
+            background: var(--surface-active);
+        }
+
+        .key.action-clear {
+            background: var(--danger-dim);
+            border-color: rgba(255, 92, 92, 0.2);
+            color: var(--danger);
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .key.action-clear:active {
+            background: rgba(255, 92, 92, 0.28);
+        }
+
+        .key.action-back {
+            width: 100%;
+            height: 48px;
+            background: var(--surface-light);
+            color: var(--text-muted);
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 14px;
+        }
+
+        @media (max-height: 680px) {
+            .key { height: 50px; font-size: 22px; }
+            .q-btn { height: 38px; font-size: 14px; }
+            .action-back { height: 42px; }
+            .display-card { padding: 12px 16px; min-height: 145px; }
+            .res-main-text { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <div class="display-card">
+        <div>
+            <div class="input-header">
+                <span>Ввод минут</span>
+                <span id="digitCount">0 симв.</span>
+            </div>
+            <div class="input-wrapper" id="inputWrapper">
+                <div class="input-display placeholder" id="inputDisplay">0</div>
+            </div>
+        </div>
+
+        <div>
+            <div class="divider"></div>
+            <div class="results">
+                <div class="res-item" onclick="copyResult('mainRes', 'badgeMain')">
+                    <div class="res-text-wrap">
+                        <span class="res-main-text" id="mainRes">0 ч 00 мин</span>
+                    </div>
+                    <span class="copy-badge" id="badgeMain">Копировать</span>
+                </div>
+                <div class="res-item" onclick="copyResult('decRes', 'badgeDec')">
+                    <div class="res-text-wrap">
+                        <span class="res-dec-text" id="decRes">0 ч</span>
+                    </div>
+                    <span class="copy-badge" id="badgeDec">Копировать</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="quick-bar">
+        <button class="q-btn" onclick="addMinutes(15)">+15</button>
+        <button class="q-btn" onclick="addMinutes(30)">+30</button>
+        <button class="q-btn" onclick="addMinutes(45)">+45</button>
+        <button class="q-btn" onclick="addMinutes(60)">+60</button>
+    </div>
+
+    <div class="keypad">
+        <button class="key" onclick="pressDigit('7')">7</button>
+        <button class="key" onclick="pressDigit('8')">8</button>
+        <button class="key" onclick="pressDigit('9')">9</button>
+
+        <button class="key" onclick="pressDigit('4')">4</button>
+        <button class="key" onclick="pressDigit('5')">5</button>
+        <button class="key" onclick="pressDigit('6')">6</button>
+
+        <button class="key" onclick="pressDigit('1')">1</button>
+        <button class="key" onclick="pressDigit('2')">2</button>
+        <button class="key" onclick="pressDigit('3')">3</button>
+
+        <button class="key action-clear" onclick="clearAll()">C</button>
+        <button class="key" onclick="pressDigit('0')">0</button>
+        <button class="key" onclick="pressDot()">,</button>
+    </div>
+    
+    <button class="key action-back" onclick="backspace()">⌫ Стереть</button>
+</div>
+
+<script>
+    let rawValue = "";
+
+    const inputDisplay = document.getElementById('inputDisplay');
+    const inputWrapper = document.getElementById('inputWrapper');
+    const mainRes = document.getElementById('mainRes');
+    const decRes = document.getElementById('decRes');
+    const digitCount = document.getElementById('digitCount');
+
+    function vibrate(ms = 12) {
+        if (navigator.vibrate) navigator.vibrate(ms);
+    }
+
+    function formatNumberStr(val) {
+        const parts = val.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        return parts.join(',');
+    }
+
+    function adjustFontSize(len) {
+        if (len <= 9) inputDisplay.style.fontSize = "44px";
+        else if (len <= 13) inputDisplay.style.fontSize = "34px";
+        else if (len <= 18) inputDisplay.style.fontSize = "26px";
+        else inputDisplay.style.fontSize = "22px";
+    }
+
+    function updateUI() {
+        if (rawValue === "" || rawValue === "0") {
+            inputDisplay.textContent = "0";
+            inputDisplay.style.fontSize = "44px";
+            inputDisplay.classList.add("placeholder");
+            digitCount.textContent = "мин";
+            mainRes.textContent = "0 ч 00 мин";
+            decRes.textContent = "0 ч";
+            return;
+        }
+
+        inputDisplay.classList.remove("placeholder");
+        const formatted = formatNumberStr(rawValue);
+        inputDisplay.textContent = formatted;
+        adjustFontSize(formatted.length);
+        digitCount.textContent = `${rawValue.replace('.', '').length} цифр`;
+
+        inputWrapper.scrollLeft = inputWrapper.scrollWidth;
+
+        const mins = parseFloat(rawValue);
+        if (isNaN(mins) || !isFinite(mins)) {
+            mainRes.textContent = "Слишком большое число";
+            decRes.textContent = "∞";
+            return;
+        }
+
+        const totalSeconds = Math.round(mins * 60);
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+        const dec = Math.round((mins / 60) * 100) / 100;
+
+        const hStr = String(h).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        const mStr = String(m).padStart(2, '0');
+        const sStr = String(s).padStart(2, '0');
+
+        mainRes.textContent = s > 0 ? `${hStr} ч ${mStr} мин ${sStr} сек` : `${hStr} ч ${mStr} мин`;
+        decRes.textContent = `${formatNumberStr(String(dec))} ч`;
+    }
+
+    function pressDigit(digit) {
+        vibrate();
+        if (rawValue === "0") {
+            rawValue = digit;
+        } else {
+            rawValue += digit;
+        }
+        updateUI();
+    }
+
+    function pressDot() {
+        vibrate();
+        if (rawValue.includes('.')) return;
+        rawValue = rawValue === "" ? "0." : rawValue + ".";
+        updateUI();
+    }
+
+    function backspace() {
+        vibrate(15);
+        if (rawValue.length > 0) {
+            rawValue = rawValue.slice(0, -1);
+            if (rawValue === "0") rawValue = "";
+            updateUI();
+        }
+    }
+
+    function clearAll() {
+        vibrate(25);
+        rawValue = "";
+        updateUI();
+    }
+
+    function addMinutes(amount) {
+        vibrate(18);
+        const current = parseFloat(rawValue) || 0;
+        const sum = Math.round((current + amount) * 100) / 100;
+        rawValue = String(sum);
+        updateUI();
+    }
+
+    function copyResult(textId, badgeId) {
+        vibrate(20);
+        const text = document.getElementById(textId).textContent;
+        
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.select();
+        
+        try {
+            document.execCommand('copy');
+            const badge = document.getElementById(badgeId);
+            badge.textContent = "Скопировано!";
+            badge.classList.add("copied");
+            setTimeout(() => {
+                badge.textContent = "Копировать";
+                badge.classList.remove("copied");
+            }, 1000);
+        } catch (err) {}
+        
+        document.body.removeChild(textArea);
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key >= '0' && e.key <= '9') pressDigit(e.key);
+        else if (e.key === '.' || e.key === ',') pressDot();
+        else if (e.key === 'Backspace') backspace();
+        else if (e.key === 'Enter' || e.key === 'Escape' || e.key === 'Delete') clearAll();
+    });
+</script>
