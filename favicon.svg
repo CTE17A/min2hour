@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Фон иконки (темный скругленный квадрат) -->
+  <rect width="64" height="64" rx="16" fill="#1e1e24"/>
+  <!-- Циферблат -->
+  <circle cx="32" cy="32" r="20" fill="none" stroke="#ffffff" stroke-width="4"/>
+  <!-- Стрелки часов (показывают 3 часа) -->
+  <path d="M32 20v12l8 4" fill="none" stroke="#4ade80" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
