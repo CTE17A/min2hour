@@ -10,6 +10,16 @@ function vibrate(ms = 12) {
     if (navigator.vibrate) navigator.vibrate(ms);
 }
 
+function getDigitWord(count) {
+    const mod10 = count % 10;
+    const mod100 = count % 100;
+
+    if (mod100 >= 11 && mod100 <= 19) return "цифр";
+    if (mod10 === 1) return "цифра";
+    if (mod10 >= 2 && mod10 <= 4) return "цифры";
+    return "цифр";
+}
+
 function formatNumberStr(val) {
     const parts = val.split('.');
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
@@ -38,9 +48,9 @@ function updateUI() {
     const formatted = formatNumberStr(rawValue);
     inputDisplay.textContent = formatted;
     adjustFontSize(formatted.length);
+
     const count = rawValue.replace('.', '').length;
     digitCount.textContent = `${count} ${getDigitWord(count)}`;
-
 
     inputWrapper.scrollLeft = inputWrapper.scrollWidth;
 
@@ -126,16 +136,6 @@ function copyResult(textId, badgeId) {
             badge.classList.remove("copied");
         }, 1000);
     } catch (err) {}
-    
-    function getDigitWord(count) {
-        const mod10 = count % 10;
-        const mod100 = count % 100;
-
-        if (mod100 >= 11 && mod100 <= 19) return "цифр";
-        if (mod10 === 1) return "цифра";
-        if (mod10 >= 2 && mod10 <= 4) return "цифры";
-        return "цифр";
-    }
 
     document.body.removeChild(textArea);
 }
