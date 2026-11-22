@@ -26,6 +26,6 @@
 
 1. Склонируйте репозиторий:
    ```bash
-   git clone [https://github.com](https://github.com/CTE17A/min2hour.git)
+   git clone https://github.com/CTE17A/min2hour.git
    ```
 2. Откройте файл `index.html` в браузере.
